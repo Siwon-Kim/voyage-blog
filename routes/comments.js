@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router();
 
-const Posts = require("../schemas/posts.js");
 const Comments = require("../schemas/comments.js");
 
 // POST: 댓글 작성 API
@@ -10,9 +9,8 @@ const Comments = require("../schemas/comments.js");
 router.post("/posts/:_postId/comments", async (req, res) => {
 	const { user, password, content } = req.body;
 	const { _postId } = req.params;
-
 	if (!content) {
-		return res.json({
+		return res.status(400).json({
 			errorMessage: "댓글 내용을 입력해주세요.",
 		});
 	}
@@ -22,13 +20,13 @@ router.post("/posts/:_postId/comments", async (req, res) => {
 		typeof content !== "string" ||
 		!_postId
 	) {
-		return res.json({
+		return res.status(400).json({
 			errorMessage: "데이터 형식이 올바르지 않습니다.",
 		});
 	}
-	console.log(_postId);
+
 	await Comments.create({ postId: _postId, user, password, content });
-	res.json({ message: "댓글을 생성하였습니다." });
+	res.status(201).json({ message: "댓글을 생성하였습니다." });
 });
 
 // GET: 댓글 목록 조회 API
@@ -45,7 +43,7 @@ router.get("/posts/:_postId/comments", async (req, res) => {
 		content: comment.content,
 		createdAt: comment.createdAt,
 	}));
-	res.json({ data });
+	res.status(200).json({ data });
 });
 
 // PUT: 댓글 수정 API
@@ -54,9 +52,8 @@ router.get("/posts/:_postId/comments", async (req, res) => {
 router.put("/posts/:_postId/comments/:_commentId", async (req, res) => {
 	const { password, content } = req.body;
 	const { _postId, _commentId } = req.params;
-
 	if (!content) {
-		return res.json({
+		return res.status(400).json({
 			errorMessage: "댓글 내용을 입력해주세요.",
 		});
 	}
@@ -74,7 +71,7 @@ router.put("/posts/:_postId/comments/:_commentId", async (req, res) => {
 	const existingComment = await Comments.find({ password });
 	if (existingComment.length) {
 		await Comments.updateOne({ password }, { $set: { content } });
-		res.json({ message: "댓글을 수정하였습니다." });
+		res.status(200).json({ message: "댓글을 수정하였습니다." });
 	} else {
 		res.status(404).json({
 			errorMessage: "댓글 조회에 실패하였습니다.",
@@ -96,7 +93,7 @@ router.delete("/posts/:_postId/comments/:_commentId", async (req, res) => {
 	const existingComment = await Comments.find({ password });
 	if (existingComment.length) {
 		await Comments.deleteOne({ password });
-		res.json({ message: "댓글을 삭제하였습니다." });
+		res.status(200).json({ message: "댓글을 삭제하였습니다." });
 	} else {
 		res.status(404).json({
 			errorMessage: "댓글 조회에 실패하였습니다.",
