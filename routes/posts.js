@@ -4,20 +4,6 @@ const router = express.Router();
 const Posts = require("../schemas/posts.js");
 const Comments = require("../schemas/comments.js");
 
-// GET: 전체 게시글 목록 조회 API
-// - 제목, 작성자명, 작성 날짜를 조회하기
-// - 작성 날짜 기준으로 내림차순 정렬하기
-router.get("/posts", async (req, res) => {
-	const posts = await Posts.find({});
-	let data = posts.map((post) => ({
-		postId: post._id,
-		user: post.user,
-		title: post.title,
-		createdAt: post.createdAt,
-	}));
-	res.json({ data });
-});
-
 // POST: 게시글 작성 API
 // - 제목, 작성자명, 비밀번호, 작성 내용을 입력하기
 router.post("/posts", async (req, res) => {
@@ -31,6 +17,20 @@ router.post("/posts", async (req, res) => {
 			errorMessage: "데이터 형식이 올바르지 않습니다.",
 		});
 	}
+});
+
+// GET: 전체 게시글 목록 조회 API
+// - 제목, 작성자명, 작성 날짜를 조회하기
+// - 작성 날짜 기준으로 내림차순 정렬하기
+router.get("/posts", async (req, res) => {
+	const posts = await Posts.find({}).sort({ createdAt: "desc" });
+	let data = posts.map((post) => ({
+		postId: post._id,
+		user: post.user,
+		title: post.title,
+		createdAt: post.createdAt,
+	}));
+	res.json({ data });
 });
 
 // GET: 게시글 조회 API
