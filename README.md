@@ -22,7 +22,7 @@
 <br /> 
 
 3.  RESTful한 API를 설계했나요? 어떤 부분이 그런가요? 어떤 부분이 그렇지 않나요?
-    * RESTful한 API를 설계하였습니다. REST의 CRUD인 GET, POST, PUT, DELETE 메서드를 각각의 역할에 맞게 사용하였고, 
+    * RESTful한 API를 설계하였다. REST의 CRUD인 GET, POST, PUT, DELETE 메서드를 각각의 역할에 맞게 사용하였고, 
       리소스가 명사형 url을 통해 잘 식별되고 있다. 
 <br /> 
 
