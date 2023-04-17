@@ -25,25 +25,33 @@ router.post("/posts/:_postId/comments", async (req, res) => {
 		});
 	}
 
-	await Comments.create({ postId: _postId, user, password, content });
-	res.status(201).json({ message: "댓글을 생성하였습니다." });
+	try {
+		await Comments.create({ postId: _postId, user, password, content });
+		res.status(201).json({ message: "댓글을 생성하였습니다." });
+	} catch (error) {
+		res.status(500).json({ error });
+	}
 });
 
 // GET: 댓글 목록 조회 API
 //     - 조회하는 게시글에 작성된 모든 댓글을 목록 형식으로 볼 수 있도록 하기
 //     - 작성 날짜 기준으로 내림차순 정렬하기
 router.get("/posts/:_postId/comments", async (req, res) => {
-	const { _postId } = req.params;
-	const comments = await Comments.find({ postId: _postId }).sort({
-		createdAt: "desc",
-	});
-	let data = comments.map((comment) => ({
-		commentId: comment._id,
-		user: comment.user,
-		content: comment.content,
-		createdAt: comment.createdAt,
-	}));
-	res.status(200).json({ data });
+	try {
+		const { _postId } = req.params;
+		const comments = await Comments.find({ postId: _postId }).sort({
+			createdAt: "desc",
+		});
+		let data = comments.map((comment) => ({
+			commentId: comment._id,
+			user: comment.user,
+			content: comment.content,
+			createdAt: comment.createdAt,
+		}));
+		res.status(200).json({ data });
+	} catch (error) {
+		res.status(500).json({ error });
+	}
 });
 
 // PUT: 댓글 수정 API
@@ -68,14 +76,18 @@ router.put("/posts/:_postId/comments/:_commentId", async (req, res) => {
 		});
 	}
 
-	const existingComment = await Comments.find({ password });
-	if (existingComment.length) {
-		await Comments.updateOne({ password }, { $set: { content } });
-		res.status(200).json({ message: "댓글을 수정하였습니다." });
-	} else {
-		res.status(404).json({
-			errorMessage: "댓글 조회에 실패하였습니다.",
-		});
+	try {
+		const existingComment = await Comments.find({ password });
+		if (existingComment.length) {
+			await Comments.updateOne({ password }, { $set: { content } });
+			res.status(200).json({ message: "댓글을 수정하였습니다." });
+		} else {
+			res.status(404).json({
+				errorMessage: "댓글 조회에 실패하였습니다.",
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ error });
 	}
 });
 
@@ -90,14 +102,18 @@ router.delete("/posts/:_postId/comments/:_commentId", async (req, res) => {
 		});
 	}
 
-	const existingComment = await Comments.find({ password });
-	if (existingComment.length) {
-		await Comments.deleteOne({ password });
-		res.status(200).json({ message: "댓글을 삭제하였습니다." });
-	} else {
-		res.status(404).json({
-			errorMessage: "댓글 조회에 실패하였습니다.",
-		});
+	try {
+		const existingComment = await Comments.find({ password });
+		if (existingComment.length) {
+			await Comments.deleteOne({ password });
+			res.status(200).json({ message: "댓글을 삭제하였습니다." });
+		} else {
+			res.status(404).json({
+				errorMessage: "댓글 조회에 실패하였습니다.",
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ error });
 	}
 });
 

@@ -22,14 +22,18 @@ router.post("/posts", async (req, res) => {
 // - 제목, 작성자명, 작성 날짜를 조회하기
 // - 작성 날짜 기준으로 내림차순 정렬하기
 router.get("/posts", async (req, res) => {
-	const posts = await Posts.find({}).sort({ createdAt: "desc" });
-	let data = posts.map((post) => ({
-		postId: post._id,
-		user: post.user,
-		title: post.title,
-		createdAt: post.createdAt,
-	}));
-	res.status(200).json({ data });
+	try {
+		const posts = await Posts.find({}).sort({ createdAt: "desc" });
+		let data = posts.map((post) => ({
+			postId: post._id,
+			user: post.user,
+			title: post.title,
+			createdAt: post.createdAt,
+		}));
+		res.status(200).json({ data });
+	} catch (error) {
+		res.status(500).json({ error });
+	}
 });
 
 // GET: 게시글 조회 API
@@ -42,15 +46,19 @@ router.get("/posts/:_postId", async (req, res) => {
 			.status(400)
 			.json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
 
-	const post = await Posts.find({ _id: _postId });
-	let data = post.map((p) => ({
-		postId: p._id,
-		user: p.user,
-		title: p.title,
-		content: p.content,
-		createdAt: p.createdAt,
-	}));
-	res.status(200).json({ data: data[0] });
+	try {
+		const post = await Posts.findOne({ _id: _postId });
+		let data = {
+			postId: post._id,
+			user: post.user,
+			title: post.title,
+			content: post.content,
+			createdAt: post.createdAt,
+		};
+		res.status(200).json({ data });
+	} catch (error) {
+		res.status(500).json({ error });
+	}
 });
 
 // PUT: 게시글 수정 API
@@ -69,14 +77,18 @@ router.put("/posts/:_postId", async (req, res) => {
 		});
 	}
 
-	const existingPost = await Posts.find({ password });
-	if (existingPost.length) {
-		await Posts.updateOne({ password }, { $set: { title, content } });
-		res.status(200).json({ message: "게시글을 수정하였습니다." });
-	} else {
-		res.status(404).json({
-			errorMessage: "게시글 조회에 실패하였습니다.",
-		});
+	try {
+		const existingPost = await Posts.find({ password });
+		if (existingPost.length) {
+			await Posts.updateOne({ password }, { $set: { title, content } });
+			res.status(200).json({ message: "게시글을 수정하였습니다." });
+		} else {
+			res.status(404).json({
+				errorMessage: "게시글 조회에 실패하였습니다.",
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ error });
 	}
 });
 
@@ -91,14 +103,18 @@ router.delete("/posts/:_postId", async (req, res) => {
 		});
 	}
 
-	const existingPost = await Posts.find({ password });
-	if (existingPost.length) {
-		await Posts.deleteOne({ password });
-		res.status(200).json({ message: "게시글을 삭제하였습니다." });
-	} else {
-		res.status(404).json({
-			errorMessage: "게시글 조회에 실패하였습니다.",
-		});
+	try {
+		const existingPost = await Posts.find({ password });
+		if (existingPost.length) {
+			await Posts.deleteOne({ password });
+			res.status(200).json({ message: "게시글을 삭제하였습니다." });
+		} else {
+			res.status(404).json({
+				errorMessage: "게시글 조회에 실패하였습니다.",
+			});
+		}
+	} catch (error) {
+		res.status(500).json({ error });
 	}
 });
 
