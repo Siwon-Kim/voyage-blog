@@ -37,8 +37,14 @@ router.post("/posts/:_postId/comments", async (req, res) => {
 //     - 조회하는 게시글에 작성된 모든 댓글을 목록 형식으로 볼 수 있도록 하기
 //     - 작성 날짜 기준으로 내림차순 정렬하기
 router.get("/posts/:_postId/comments", async (req, res) => {
-	try {
-		const { _postId } = req.params;
+	const { _postId } = req.params;
+    if(!_postId) {
+        return res.status(400).json({
+			errorMessage: "데이터 형식이 올바르지 않습니다.",
+		});
+    }
+    
+    try {
 		const comments = await Comments.find({ postId: _postId }).sort({
 			createdAt: "desc",
 		});

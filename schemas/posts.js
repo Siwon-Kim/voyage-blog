@@ -1,6 +1,11 @@
 const mongoose = require("mongoose");
 
 const postsSchema = new mongoose.Schema({
+	// postId: {
+	// 	type: mongoose.Schema.Types.ObjectId,
+	// 	required: true,
+	// 	default: ObjectId()
+	// },
 	user: {
 		type: String,
 		required: true,

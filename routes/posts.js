@@ -6,15 +6,23 @@ const Posts = require("../schemas/posts.js");
 // POST: 게시글 작성 API
 // - 제목, 작성자명, 비밀번호, 작성 내용을 입력하기
 router.post("/posts", async (req, res) => {
-	try {
-		const { user, password, title, content } = req.body;
-
-		await Posts.create({ user, password, title, content });
-		res.status(201).json({ message: "게시글을 생성하였습니다." });
-	} catch {
-		res.status(400).json({
+	const { user, password, title, content } = req.body;
+	if (
+		typeof user !== "string" ||
+		typeof password !== "string" ||
+		typeof title !== "string" ||
+		typeof content !== "string"
+	) {
+		return res.status(400).json({
 			errorMessage: "데이터 형식이 올바르지 않습니다.",
 		});
+	}
+	
+	try {
+		await Posts.create({ user, password, title, content });
+		res.status(201).json({ message: "게시글을 생성하였습니다." });
+	} catch (error) {
+		res.status(500).json({ error });
 	}
 });
 
@@ -28,6 +36,7 @@ router.get("/posts", async (req, res) => {
 			postId: post._id,
 			user: post.user,
 			title: post.title,
+			content: post.content,
 			createdAt: post.createdAt,
 		}));
 		res.status(200).json({ data });
