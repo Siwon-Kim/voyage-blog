@@ -119,18 +119,16 @@ router.put("/:_commentId", authMiddleware, async (req, res) => {
 				errorMessage: "댓글의 수정 권한이 존재하지 않습니다.",
 			});
 
-		try {
-			await Comments.updateOne(
-				{ _id: _commentId, postId: _postId },
-				{ $set: { comment } }
-			);
-			res.status(200).json({ message: "댓글을 수정하였습니다." });
-		} catch (error) {
+		await Comments.updateOne(
+			{ _id: _commentId, postId: _postId },
+			{ $set: { comment } }
+		).catch((error) => {
 			console.error(error);
 			res.status(400).json({
 				errorMessage: "댓글 수정이 정상적으로 처리되지 않았습니다.",
 			});
-		}
+		});
+		res.status(200).json({ message: "댓글을 수정하였습니다." });
 	} catch (error) {
 		console.error(error);
 		res.status(400).json({
