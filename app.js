@@ -3,9 +3,7 @@ const cookieParser = require("cookie-parser");
 const app = express();
 const port = 3001;
 
-const commentsRouter = require("./routes/comments.js");
-const postsRouter = require("./routes/posts.js");
-const usersRouter = require("./routes/users.js");
+const mainRouter = require("./routes/index.js");
 const connect = require("./schemas");
 connect();
 
@@ -17,8 +15,7 @@ app.get("/", (req, res) => {
 	res.send("APIs for Voyage Blog");
 });
 
-app.use("/users", [usersRouter]);
-app.use("/posts", [postsRouter, commentsRouter]);
+app.use("/", [mainRouter]);
 
 
 app.listen(port, () => {

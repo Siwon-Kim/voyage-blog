@@ -1,5 +1,5 @@
 const express = require("express");
-const router = express.Router();
+const router = express.Router({ mergeParams: true });
 const Posts = require("../schemas/posts.js");
 const Comments = require("../schemas/comments.js");
 const Users = require("../schemas/users.js");
