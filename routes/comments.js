@@ -13,6 +13,12 @@ router.post("/:_postId/comments", authMiddleware, async (req, res) => {
 	const { userId } = res.locals.user;
 	const { comment } = req.body;
 	const { _postId } = req.params;
+
+	if (_postId.length !== 24)
+		return res
+			.status(412)
+			.json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
+
 	if (!comment || typeof comment !== "string")
 		return res.status(412).json({
 			errorMessage: "데이터 형식이 올바르지 않습니다.",
@@ -31,7 +37,7 @@ router.post("/:_postId/comments", authMiddleware, async (req, res) => {
 		res.status(201).json({ message: "댓글을 작성하였습니다." });
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ errorMessage: "댓글 작성에 실패하였습니다." });
+		res.status(400).json({ errorMessage: "댓글 작성에 실패하였습니다." });
 	}
 });
 
@@ -40,6 +46,12 @@ router.post("/:_postId/comments", authMiddleware, async (req, res) => {
 // - 작성 날짜 기준으로 내림차순 정렬하기
 router.get("/:_postId/comments", async (req, res) => {
 	const { _postId } = req.params;
+
+	if (_postId.length !== 24)
+		return res
+			.status(412)
+			.json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
+
 	const existingPost = await Posts.findById(_postId).exec();
 	if (!existingPost)
 		return res
@@ -62,7 +74,7 @@ router.get("/:_postId/comments", async (req, res) => {
 		}));
 		res.status(200).json({ comments });
 	} catch (error) {
-		res.status(500).json({ errorMessage: "댓글 조회에 실패하였습니다." });
+		res.status(400).json({ errorMessage: "댓글 조회에 실패하였습니다." });
 	}
 });
 
@@ -78,7 +90,12 @@ router.put(
 		const { comment } = req.body;
 		const { _postId, _commentId } = req.params;
 
-		if (typeof comment !== "string") {
+		if (_postId.length !== 24 || _commentId.length !== 24)
+			return res
+				.status(412)
+				.json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
+
+		if (!comment || typeof comment !== "string") {
 			return res.status(412).json({
 				errorMessage: "데이터 형식이 올바르지 않습니다.",
 			});
@@ -119,7 +136,7 @@ router.put(
 			}
 		} catch (error) {
 			console.error(error);
-			res.status(500).json({
+			res.status(400).json({
 				errorMessage: "댓글 수정에 실패하였습니다.",
 			});
 		}
@@ -135,6 +152,11 @@ router.delete(
 	async (req, res) => {
 		const { userId } = res.locals.user;
 		const { _postId, _commentId } = req.params;
+
+		if (_postId.length !== 24 || _commentId.length !== 24)
+			return res
+				.status(412)
+				.json({ errorMessage: "데이터 형식이 올바르지 않습니다." });
 
 		const existingPost = await Posts.findById(_postId).exec();
 		if (!existingPost)
@@ -168,7 +190,7 @@ router.delete(
 			}
 		} catch (error) {
 			console.error(error);
-			res.status(500).json({
+			res.status(400).json({
 				errorMessage: "댓글 삭제에 실패하였습니다.",
 			});
 		}
