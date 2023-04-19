@@ -6,7 +6,7 @@ const commentsSchema = new mongoose.Schema(
 			type: String,
 			required: true,
 		},
-		user: {
+		nickname: {
 			type: String,
 			required: true,
 		},
@@ -14,7 +14,7 @@ const commentsSchema = new mongoose.Schema(
 			type: mongoose.Schema.Types.ObjectId,
 			required: true,
 		},
-		content: {
+		comment: {
 			type: String,
 			required: true,
 		},

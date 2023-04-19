@@ -25,11 +25,10 @@ router.post("/", authMiddleware, async (req, res) => {
 			errorMessage: "게시글 내용의 형식이 일치하지 않습니다.",
 		});
 
-	const existingUser = await Users.findById(userId);
-	const user = existingUser.nickname;
-
 	try {
-		await Posts.create({ user, title, content, userId });
+		const existingUser = await Users.findById(userId);
+		const nickname = existingUser.nickname;
+		await Posts.create({ nickname, title, content, userId });
 		res.status(201).json({ message: "게시글을 작성에 성공하였습니다." });
 	} catch (error) {
 		console.error(error);
@@ -44,12 +43,12 @@ router.get("/", async (req, res) => {
 	try {
 		const allPosts = await Posts.find({})
 			.sort({ createdAt: "desc" })
-			.populate("userId");
-		console.log(allPosts);
+			.populate("userId").exec();
+
 		let posts = allPosts.map((post) => ({
 			postId: post._id,
 			userId: post.userId,
-			nickname: post.user,
+			nickname: post.nickname,
 			title: post.title,
 			createdAt: post.created_at,
 			updatedAt: post.updated_at,
@@ -68,11 +67,11 @@ router.get("/:_postId", async (req, res) => {
 	const { _postId } = req.params;
 
 	try {
-		const targetPost = await Posts.findOne({ _id: _postId });
+		const targetPost = await Posts.findOne({ _id: _postId }).exec();
 		let post = {
 			postId: targetPost._id,
 			userId: targetPost.userId,
-			nickname: targetPost.user,
+			nickname: targetPost.nickname,
 			title: targetPost.title,
 			content: targetPost.content,
 			createdAt: targetPost.created_at,
@@ -106,23 +105,21 @@ router.put("/:_postId", authMiddleware, async (req, res) => {
 			.json({ errorMessage: "게시글 내용의 형식이 올바르지 않습니다." });
 
 	try {
-		const existingPost = await Posts.findOne({ userId, _id: _postId });
-		if (existingPost) {
-			try {
-				await Posts.updateOne(
-					{ userId, _id: _postId },
-					{ $set: { title, content } }
-				);
-				res.status(200).json({ message: "게시글을 수정하였습니다." });
-			} catch (error) {
-				console.error(error);
-				return res.status(401).json({
-					errorMessage: "게시글이 정상적으로 수정되지 않았습니다.",
-				});
-			}
-		} else {
-			res.status(403).json({
+		const existingPost = await Posts.findOne({ userId, _id: _postId }).exec();
+		if (!existingPost)
+			return res.status(403).json({
 				errorMessage: "게시글 수정의 권한이 존재하지 않습니다.",
+			});
+		try {
+			await Posts.updateOne(
+				{ userId, _id: _postId },
+				{ $set: { title, content } }
+			);
+			res.status(200).json({ message: "게시글을 수정하였습니다." });
+		} catch (error) {
+			console.error(error);
+			return res.status(401).json({
+				errorMessage: "게시글이 정상적으로 수정되지 않았습니다.",
 			});
 		}
 	} catch (error) {
@@ -138,7 +135,7 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 	const { _postId } = req.params;
 
 	try {
-		const existingPost = await Posts.findOne({ _id: _postId });
+		const existingPost = await Posts.findOne({ _id: _postId }).exec();
 		if (existingPost) {
 			if (existingPost.userId.toString() !== userId) {
 				return res.status(403).json({
@@ -164,7 +161,7 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 		}
 	} catch (error) {
 		console.error(error);
-		res.status(500).json({ errorMessage: "게시글 삭제에 실패하였습니다.", });
+		res.status(500).json({ errorMessage: "게시글 삭제에 실패하였습니다." });
 	}
 });
 

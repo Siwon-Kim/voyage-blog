@@ -3,7 +3,7 @@ const Users = require("./users");
 
 const postsSchema = new mongoose.Schema(
 	{
-		user: {
+		nickname: {
 			type: String,
 			required: true,
 		},
