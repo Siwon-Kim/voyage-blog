@@ -20,18 +20,7 @@ const postsSchema = new mongoose.Schema(
 			required: true,
 		},
 	},
-	{ timestamps: { createdAt: "created_at", updatedAt: "updated_at" } } //  {ti: true}}
+	{ timestamps: true }
 );
-
-// postsSchema.virtual("userId", {
-// 	ref: Users,
-// 	localField: '_id',
-// 	foreignField: 'userId',
-// 	justOne: true,
-// });
-
-// postsSchema.set("toJSON", {
-// 	virtuals: true,
-// });
 
 module.exports = mongoose.model("Posts", postsSchema);

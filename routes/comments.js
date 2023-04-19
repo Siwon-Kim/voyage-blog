@@ -69,8 +69,8 @@ router.get("/", async (req, res) => {
 			userId: comment.userId,
 			nickname: comment.nickname,
 			comment: comment.comment,
-			createdAt: comment.created_at,
-			updatedAt: comment.updated_at,
+			createdAt: comment.createdAt,
+			updatedAt: comment.updatedAt,
 		}));
 		res.status(200).json({ comments });
 	} catch (error) {

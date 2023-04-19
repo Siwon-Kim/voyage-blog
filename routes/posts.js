@@ -5,6 +5,7 @@ const Comments = require("../schemas/comments.js");
 const Users = require("../schemas/users.js");
 const authMiddleware = require("../middlewares/auth-middleware");
 
+
 // POST: 게시글 작성 API
 // - 토큰을 검사하여, 유효한 토큰일 경우에만 게시글 작성 가능
 // - 제목, 작성 내용을 입력하기
@@ -50,8 +51,8 @@ router.get("/", async (req, res) => {
 			userId: post.userId,
 			nickname: post.nickname,
 			title: post.title,
-			createdAt: post.created_at,
-			updatedAt: post.updated_at,
+			createdAt: post.createdAt,
+			updatedAt: post.updatedAt,
 		}));
 		res.status(200).json({ posts });
 	} catch (error) {
@@ -79,8 +80,8 @@ router.get("/:_postId", async (req, res) => {
 			nickname: targetPost.nickname,
 			title: targetPost.title,
 			content: targetPost.content,
-			createdAt: targetPost.created_at,
-			updatedAt: targetPost.updated_at,
+			createdAt: targetPost.createdAt,
+			updatedAt: targetPost.updatedAt,
 		};
 		res.status(200).json({ post });
 	} catch (error) {
