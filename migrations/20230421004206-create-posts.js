@@ -18,19 +18,14 @@ module.exports = {
         },
         onDelete: 'CASCADE',
       },
-      Nickname: {
-        allowNull: false,
-        type: Sequelize.STRING,
-        reference: {
-          model: 'Users',
-          key: 'nickname',
-        },
-        onDelete: 'CASCADE',
-      },
       title: {
         allowNull: false,
         type: Sequelize.STRING
       },
+      nickname: {
+				allowNull: false,
+				type: Sequelize.STRING,
+			},
       content: {
         allowNull: false,
         type: Sequelize.STRING

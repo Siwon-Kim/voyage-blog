@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
 				{
 					targetKey: "userId",
 					foreignKey: "UserId",
-				},
-				{
-					targetKey: "nickname",
-					foreignKey: "Nickname",
 				}
 			);
 		}
@@ -33,11 +29,11 @@ module.exports = (sequelize, DataTypes) => {
 				allowNull: false,
 				type: DataTypes.INTEGER,
 			},
-			Nickname: {
+			title: {
 				allowNull: false,
 				type: DataTypes.STRING,
 			},
-			title: {
+			nickname: {
 				allowNull: false,
 				type: DataTypes.STRING,
 			},

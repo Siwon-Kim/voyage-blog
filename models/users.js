@@ -13,10 +13,6 @@ module.exports = (sequelize, DataTypes) => {
 				{
 					sourceKey: "userId",
 					foreignKey: "UserId",
-				},
-				{
-					sourceKey: "nickname",
-					foreignKey: "Nickname",
 				}
 			);
 		}
