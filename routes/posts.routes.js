@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
-const { Posts } = require("../models");
+const { Posts, Likes } = require("../models");
+const { Op } = require("sequelize");
 const authMiddleware = require("../middlewares/auth-middleware.js");
 const errorHandler = require("../middlewares/errorHandler");
 
@@ -19,7 +20,7 @@ router.post("/", authMiddleware, async (req, res) => {
 		throw new Error("412/게시글 내용의 형식이 일치하지 않습니다.");
 
 	try {
-		await Posts.create({ nickname, title, content, UserId: userId });
+		await Posts.create({ nickname, title, content, likes: 0, UserId: userId });
 		res.status(201).json({ message: "게시글을 작성에 성공하였습니다." });
 	} catch (error) {
 		throw new Error("400/게시글 작성에 실패하였습니다.");
@@ -40,7 +41,7 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// GET: 게시글 조회 API
+// GET: 게시글 상세 조회 API
 router.get("/:_postId", async (req, res) => {
 	const { _postId } = req.params;
 
@@ -78,7 +79,11 @@ router.put("/:_postId", authMiddleware, async (req, res) => {
 	try {
 		await Posts.update(
 			{ title, content },
-			{ where: { UserId: userId, postId: _postId } }
+			{
+				where: {
+					[Op.and]: [{ postId: _postId }, { UserId: userId }],
+				},
+			}
 		)
 			.then(res.status(200).json({ message: "게시글을 수정하였습니다." }))
 			.catch((error) => {
@@ -103,7 +108,9 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 
 	try {
 		await Posts.destroy({
-			where: { UserId: userId, postId: _postId },
+			where: {
+				[Op.and]: [{ postId: _postId }, { UserId: userId }],
+			},
 		})
 			.then(
 				res.status(200).json({
@@ -117,6 +124,74 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 		throw new Error(error.message || "400/게시글 삭제에 실패하였습니다.");
 	}
 });
+
+// POST: 게시글 좋아요 API
+router.post("/:_postId/like", authMiddleware, async (req, res) => {
+	const { _postId } = req.params;
+	const { userId } = res.locals.user;
+
+	const existingPost = await Posts.findByPk(_postId);
+	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
+	const existingLike = await Likes.findOne({
+		where: {
+			[Op.and]: [{ PostId: _postId }, { UserId: userId }],
+		},
+	});
+
+	try {
+		// like 누르기
+		if (!existingLike) {
+			// Likes 테이블에 row 추가
+			await Likes.create({ UserId: userId, PostId: _postId }).then(
+				res.status(200).json({
+					message: "게시글의 좋아요를 등록하였습니다.",
+				})
+			);
+			// Posts 테이블의 likes attribute 값 1 증가
+			let likes = await Posts.findByPk(_postId)
+			likes = likes.dataValues.likes + 1
+			await Posts.update(
+				{ likes },
+				{
+					where: {
+						[Op.and]: [{ postId: _postId }, { UserId: userId }],
+					},
+				}
+			)
+		}
+
+		// like 지우기
+		else {
+			// Likes 테이블에 row 제거
+			await Likes.destroy({
+				where: {
+					[Op.and]: [{ postId: _postId }, { UserId: userId }],
+				},
+			}).then(
+				res.status(200).json({
+					message: "게시글의 좋아요를 취소하였습니다.",
+				})
+			);
+			// Posts 테이블의 likes attribute 값 1 감소
+			let likes = await Posts.findByPk(_postId)
+			likes = likes.dataValues.likes - 1
+			await Posts.update(
+				{ likes },
+				{
+					where: {
+						[Op.and]: [{ postId: _postId }, { UserId: userId }],
+					},
+				}
+			)
+		}
+	} catch (error) {
+		throw new Error("400/게시글 좋아요에 실패하였습니다.");
+	}
+});
+
+// GET: 좋아요 게시글 조회
+router.get("/like", authMiddleware, async (req, res) => {});
 
 router.use(errorHandler);
 
