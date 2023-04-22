@@ -118,6 +118,20 @@
         }
       }
     },
+    "/posts/like": {
+      "get": {
+        "description": "",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
     "/posts/{_postId}": {
       "get": {
         "description": "",
@@ -170,6 +184,27 @@
         }
       },
       "delete": {
+        "description": "",
+        "parameters": [
+          {
+            "name": "_postId",
+            "in": "path",
+            "required": true,
+            "type": "string"
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK"
+          },
+          "403": {
+            "description": "Forbidden"
+          }
+        }
+      }
+    },
+    "/posts/{_postId}/like": {
+      "post": {
         "description": "",
         "parameters": [
           {

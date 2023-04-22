@@ -11,7 +11,9 @@ router.post("/", authMiddleware, async (req, res) => {
 	const { comment } = req.body;
 	const { _postId } = req.params;
 
-	if (!comment || typeof comment !== "string")
+	if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
+	
+	if (typeof comment !== "string")
 		throw new Error("412/데이터 형식이 올바르지 않습니다.");
 
 	const existingPost = await Posts.findByPk(_postId);
@@ -56,7 +58,9 @@ router.put("/:_commentId", authMiddleware, async (req, res) => {
 	const { comment } = req.body;
 	const { _postId, _commentId } = req.params;
 
-	if (!comment || typeof comment !== "string")
+	if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
+
+	if (typeof comment !== "string")
 		throw new Error("412/데이터 형식이 올바르지 않습니다.");
 
 	const existingPost = await Posts.findByPk(_postId);
