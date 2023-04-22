@@ -20,7 +20,13 @@ router.post("/", authMiddleware, async (req, res) => {
 		throw new Error("412/게시글 내용의 형식이 일치하지 않습니다.");
 
 	try {
-		await Posts.create({ nickname, title, content, likes: 0, UserId: userId });
+		await Posts.create({
+			nickname,
+			title,
+			content,
+			likes: 0,
+			UserId: userId,
+		});
 		res.status(201).json({ message: "게시글을 작성에 성공하였습니다." });
 	} catch (error) {
 		throw new Error("400/게시글 작성에 실패하였습니다.");
@@ -30,14 +36,52 @@ router.post("/", authMiddleware, async (req, res) => {
 // GET: 전체 게시글 목록 조회 API
 router.get("/", async (req, res) => {
 	try {
-		const posts = await Posts.findAll({
+		const allPosts = await Posts.findAll({
 			order: [["createdAt", "DESC"]],
 		});
-		if (posts.length === 0)
+		if (allPosts.length === 0)
 			throw new Error("404/게시글이 존재하지 않습니다.");
+		const posts = allPosts.map((post) => ({
+			postId: post.postId,
+			userId: post.UserId,
+			nickname: post.nickname,
+			title: post.title,
+			createdAt: post.createdAt,
+			updatedAt: post.updatedAt,
+			likes: post.likes,
+		}));
 		res.status(200).json({ posts });
 	} catch (error) {
 		throw new Error(error.message || "400/게시글 조회에 실패하였습니다.");
+	}
+});
+
+// GET: 좋아요 게시글 조회
+router.get("/like", authMiddleware, async (req, res) => {
+	try {
+		const likedPosts = await Posts.findAll({
+			where: {
+				likes: {
+					[Op.gt]: 0,
+				},
+			},
+		});
+		if (likedPosts.length === 0)
+			throw new Error("404/게시글이 존재하지 않습니다.");
+		const posts = likedPosts.map((post) => ({
+			postId: post.postId,
+			userId: post.UserId,
+			nickname: post.nickname,
+			title: post.title,
+			createdAt: post.createdAt,
+			updatedAt: post.updatedAt,
+			likes: post.likes,
+		}));
+		res.status(200).json({ posts });
+	} catch (error) {
+		throw new Error(
+			error.message || "400/좋아요 게시글 조회에 실패하였습니다."
+		);
 	}
 });
 
@@ -46,8 +90,18 @@ router.get("/:_postId", async (req, res) => {
 	const { _postId } = req.params;
 
 	try {
-		const post = await Posts.findByPk(_postId);
-		if (!post) throw new Error("404/게시글이 존재하지 않습니다.");
+		const targetPost = await Posts.findByPk(_postId);
+		if (!targetPost) throw new Error("404/게시글이 존재하지 않습니다.");
+		const post = {
+			postId: targetPost.postId,
+			userId: targetPost.UserId,
+			nickname: targetPost.nickname,
+			title: targetPost.title,
+			content: targetPost.content,
+			createdAt: targetPost.createdAt,
+			updatedAt: targetPost.updatedAt,
+			likes: targetPost.likes,
+		};
 		res.status(200).json({ post });
 	} catch (error) {
 		throw new Error(error.message || "400/게시글 조회에 실패하였습니다.");
@@ -149,8 +203,8 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 				})
 			);
 			// Posts 테이블의 likes attribute 값 1 증가
-			let likes = await Posts.findByPk(_postId)
-			likes = likes.dataValues.likes + 1
+			let likes = await Posts.findByPk(_postId);
+			likes = likes.dataValues.likes + 1;
 			await Posts.update(
 				{ likes },
 				{
@@ -158,7 +212,7 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 						[Op.and]: [{ postId: _postId }, { UserId: userId }],
 					},
 				}
-			)
+			);
 		}
 
 		// like 지우기
@@ -174,8 +228,8 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 				})
 			);
 			// Posts 테이블의 likes attribute 값 1 감소
-			let likes = await Posts.findByPk(_postId)
-			likes = likes.dataValues.likes - 1
+			let likes = await Posts.findByPk(_postId);
+			likes = likes.dataValues.likes - 1;
 			await Posts.update(
 				{ likes },
 				{
@@ -183,15 +237,12 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 						[Op.and]: [{ postId: _postId }, { UserId: userId }],
 					},
 				}
-			)
+			);
 		}
 	} catch (error) {
 		throw new Error("400/게시글 좋아요에 실패하였습니다.");
 	}
 });
-
-// GET: 좋아요 게시글 조회
-router.get("/like", authMiddleware, async (req, res) => {});
 
 router.use(errorHandler);
 
