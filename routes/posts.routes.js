@@ -207,7 +207,7 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 			);
 			// Posts 테이블의 likes attribute 값 1 증가
 			let likes = await Posts.findByPk(_postId);
-			likes = likes.dataValues.likes + 1;
+			likes = likes.dataValues.likes + 1; // increment
 			await Posts.update({ likes }, { where: { postId: _postId } });
 		}
 
