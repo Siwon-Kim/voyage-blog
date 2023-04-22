@@ -56,27 +56,30 @@ router.get("/", async (req, res) => {
 	}
 });
 
-// GET: 좋아요 게시글 조회
+// GET: 좋아요한 게시글 조회
 router.get("/like", authMiddleware, async (req, res) => {
+	const { userId } = res.locals.user;
+	const likedPosts = await Likes.findAll({
+		attributes: ["PostId"],
+		where: { UserId: userId },
+	});
+	if (likedPosts.length === 0)
+		throw new Error("404/아직 좋아요를 누른 게시글이 없습니다.");
 	try {
-		const likedPosts = await Posts.findAll({
-			where: {
-				likes: {
-					[Op.gt]: 0,
-				},
-			},
+		const postPromises = likedPosts.map(async (post) => {
+			const targetPost = await Posts.findByPk(post.PostId);
+			const p = {
+				postId: targetPost.postId,
+				userId: targetPost.UserId,
+				nickname: targetPost.nickname,
+				title: targetPost.title,
+				createdAt: targetPost.createdAt,
+				updatedAt: targetPost.updatedAt,
+				likes: targetPost.likes,
+			};
+			return p;
 		});
-		if (likedPosts.length === 0)
-			throw new Error("404/게시글이 존재하지 않습니다.");
-		const posts = likedPosts.map((post) => ({
-			postId: post.postId,
-			userId: post.UserId,
-			nickname: post.nickname,
-			title: post.title,
-			createdAt: post.createdAt,
-			updatedAt: post.updatedAt,
-			likes: post.likes,
-		}));
+		const posts = await Promise.all(postPromises);
 		res.status(200).json({ posts });
 	} catch (error) {
 		throw new Error(
@@ -205,14 +208,7 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 			// Posts 테이블의 likes attribute 값 1 증가
 			let likes = await Posts.findByPk(_postId);
 			likes = likes.dataValues.likes + 1;
-			await Posts.update(
-				{ likes },
-				{
-					where: {
-						[Op.and]: [{ postId: _postId }, { UserId: userId }],
-					},
-				}
-			);
+			await Posts.update({ likes }, { where: { postId: _postId } });
 		}
 
 		// like 지우기
@@ -230,14 +226,8 @@ router.post("/:_postId/like", authMiddleware, async (req, res) => {
 			// Posts 테이블의 likes attribute 값 1 감소
 			let likes = await Posts.findByPk(_postId);
 			likes = likes.dataValues.likes - 1;
-			await Posts.update(
-				{ likes },
-				{
-					where: {
-						[Op.and]: [{ postId: _postId }, { UserId: userId }],
-					},
-				}
-			);
+			likes = likes < 0 ? 0 : likes; // prevent negative values
+			await Posts.update({ likes }, { where: { postId: _postId } });
 		}
 	} catch (error) {
 		throw new Error("400/게시글 좋아요에 실패하였습니다.");
