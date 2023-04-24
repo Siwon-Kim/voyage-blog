@@ -10,26 +10,20 @@ router.post("/", authMiddleware, async (req, res) => {
 	const { userId, nickname } = res.locals.user;
 	const { title, content } = req.body;
 
-	if (!title || !content)
-		throw new Error("412/데이터의 형식이 일치하지 않습니다.");
-
-	if (typeof title !== "string")
-		throw new Error("412/게시글 제목의 형식이 일치하지 않습니다.");
-
-	if (typeof content !== "string")
-		throw new Error("412/게시글 내용의 형식이 일치하지 않습니다.");
-
 	try {
-		await Posts.create({
-			nickname,
-			title,
-			content,
-			likes: 0,
-			UserId: userId,
-		});
+		if (!title || !content)
+			throw new Error("412/데이터의 형식이 일치하지 않습니다.");
+
+		if (typeof title !== "string")
+			throw new Error("412/게시글 제목의 형식이 일치하지 않습니다.");
+
+		if (typeof content !== "string")
+			throw new Error("412/게시글 내용의 형식이 일치하지 않습니다.");
+
+		await Posts.create({ nickname, title, content, UserId: userId });
 		res.status(201).json({ message: "게시글을 작성에 성공하였습니다." });
 	} catch (error) {
-		throw new Error("400/게시글 작성에 실패하였습니다.");
+		throw new Error(error.message || "400/게시글 작성에 실패하였습니다.");
 	}
 });
 
@@ -41,6 +35,7 @@ router.get("/", async (req, res) => {
 		});
 		if (allPosts.length === 0)
 			throw new Error("404/게시글이 존재하지 않습니다.");
+
 		const posts = allPosts.map((post) => ({
 			postId: post.postId,
 			userId: post.UserId,
@@ -48,7 +43,7 @@ router.get("/", async (req, res) => {
 			title: post.title,
 			createdAt: post.createdAt,
 			updatedAt: post.updatedAt,
-			likes: post.likes,
+			likes: post.like,
 		}));
 		res.status(200).json({ posts });
 	} catch (error) {
@@ -58,29 +53,38 @@ router.get("/", async (req, res) => {
 
 // GET: 좋아요한 게시글 조회
 router.get("/like", authMiddleware, async (req, res) => {
-	const { userId } = res.locals.user;
-	const likedPosts = await Likes.findAll({
-		attributes: ["PostId"],
-		where: { UserId: userId },
-	});
-	if (likedPosts.length === 0)
-		throw new Error("404/아직 좋아요를 누른 게시글이 없습니다.");
 	try {
-		const postPromises = likedPosts.map(async (post) => {
-			const targetPost = await Posts.findByPk(post.PostId);
-			const p = {
-				postId: targetPost.postId,
-				userId: targetPost.UserId,
-				nickname: targetPost.nickname,
-				title: targetPost.title,
-				createdAt: targetPost.createdAt,
-				updatedAt: targetPost.updatedAt,
-				likes: targetPost.likes,
-			};
-			return p;
+		const { userId } = res.locals.user;
+		const getLiked = await Likes.findAll({
+			where: { userId: userId },
+			attributes: ["postId"],
 		});
-		const posts = await Promise.all(postPromises);
-		res.status(200).json({ posts });
+
+		if (getLiked.length < 0)
+			throw new Error("404/아직 좋아요를 누른 게시글이 없습니다.");
+
+		const postIds = getLiked.map((like) => {
+			return like.dataValues.postId;
+		});
+		const getPosts = await Posts.findAll({
+			where: {
+				postId: {
+					[Op.in]: postIds,
+				},
+			},
+		});
+
+		const posts = getPosts.map((post) => ({
+			postId: post.postId,
+			userId: post.UserId,
+			nickname: post.nickname,
+			title: post.title,
+			createdAt: post.createdAt,
+			updatedAt: post.updatedAt,
+			likes: post.like,
+		}));
+
+		return res.status(200).json({ posts });
 	} catch (error) {
 		throw new Error(
 			error.message || "400/좋아요 게시글 조회에 실패하였습니다."
@@ -95,6 +99,7 @@ router.get("/:_postId", async (req, res) => {
 	try {
 		const targetPost = await Posts.findByPk(_postId);
 		if (!targetPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
 		const post = {
 			postId: targetPost.postId,
 			userId: targetPost.UserId,
@@ -103,7 +108,7 @@ router.get("/:_postId", async (req, res) => {
 			content: targetPost.content,
 			createdAt: targetPost.createdAt,
 			updatedAt: targetPost.updatedAt,
-			likes: targetPost.likes,
+			likes: targetPost.like,
 		};
 		res.status(200).json({ post });
 	} catch (error) {
@@ -117,23 +122,23 @@ router.put("/:_postId", authMiddleware, async (req, res) => {
 	const { title, content } = req.body;
 	const { _postId } = req.params;
 
-	if (!title || !content)
-		throw new Error("412/데이터 형식이 올바르지 않습니다.");
-
-	if (typeof title !== "string")
-		throw new Error("412/게시글 제목의 형식이 올바르지 않습니다.");
-
-	if (typeof content !== "string")
-		throw new Error("412/게시글 내용의 형식이 올바르지 않습니다.");
-
-	const existingPost = await Posts.findOne({
-		where: { UserId: userId, postId: _postId }, // where절 key값 case-insensitive
-	});
-
-	if (!existingPost)
-		throw new Error("403/게시글 수정의 권한이 존재하지 않습니다.");
-
 	try {
+		if (!title || !content)
+			throw new Error("412/데이터 형식이 올바르지 않습니다.");
+
+		if (typeof title !== "string")
+			throw new Error("412/게시글 제목의 형식이 올바르지 않습니다.");
+
+		if (typeof content !== "string")
+			throw new Error("412/게시글 내용의 형식이 올바르지 않습니다.");
+
+		const existingPost = await Posts.findOne({
+			where: { UserId: userId, postId: _postId }, // where절 key값 case-insensitive
+		});
+
+		if (!existingPost)
+			throw new Error("403/게시글 수정의 권한이 존재하지 않습니다.");
+
 		await Posts.update(
 			{ title, content },
 			{
@@ -156,14 +161,14 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 	const { userId } = res.locals.user;
 	const { _postId } = req.params;
 
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) {
-		throw new Error("404/게시글이 존재하지 않습니다.");
-	}
-	if (existingPost.UserId !== userId)
-		throw new Error("403/게시글의 삭제 권한이 존재하지 않습니다.");
-
 	try {
+		const existingPost = await Posts.findByPk(_postId);
+		if (!existingPost) {
+			throw new Error("404/게시글이 존재하지 않습니다.");
+		}
+		if (existingPost.UserId !== userId)
+			throw new Error("403/게시글의 삭제 권한이 존재하지 않습니다.");
+
 		await Posts.destroy({
 			where: {
 				[Op.and]: [{ postId: _postId }, { UserId: userId }],
@@ -186,51 +191,38 @@ router.delete("/:_postId", authMiddleware, async (req, res) => {
 router.post("/:_postId/like", authMiddleware, async (req, res) => {
 	const { _postId } = req.params;
 	const { userId } = res.locals.user;
-
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
-
-	const existingLike = await Likes.findOne({
-		where: {
-			[Op.and]: [{ PostId: _postId }, { UserId: userId }],
-		},
-	});
-
+    
 	try {
-		// like 누르기
-		if (!existingLike) {
-			// Likes 테이블에 row 추가
-			await Likes.create({ UserId: userId, PostId: _postId }).then(
-				res.status(200).json({
-					message: "게시글의 좋아요를 등록하였습니다.",
-				})
-			);
-			// Posts 테이블의 likes attribute 값 1 증가
-			let likes = await Posts.findByPk(_postId);
-			likes = likes.dataValues.likes + 1; // increment
-			await Posts.update({ likes }, { where: { postId: _postId } });
-		}
+		const getPost = await Posts.findByPk(_postId);
+		if (!getPost) throw new Error("404/게시글이 존재하지 않습니다.");
 
-		// like 지우기
-		else {
-			// Likes 테이블에 row 제거
+		const getLike = await Likes.findOne({
+			where: {
+				[Op.and]: [{ PostId: _postId }, [{ userId: userId }]],
+			},
+		});
+
+		if (!getLike) {
+			await Likes.create({ UserId: userId, PostId: _postId });
+			await Posts.increment("like", { where: { postId: _postId } });
+
+			res
+				.status(200)
+				.json({ message: "게시글의 좋아요를 등록하였습니다" });
+		} else {
 			await Likes.destroy({
 				where: {
-					[Op.and]: [{ postId: _postId }, { UserId: userId }],
+					[Op.and]: [{ postId: _postId }, [{ userId }]],
 				},
-			}).then(
-				res.status(200).json({
-					message: "게시글의 좋아요를 취소하였습니다.",
-				})
-			);
-			// Posts 테이블의 likes attribute 값 1 감소
-			let likes = await Posts.findByPk(_postId);
-			likes = likes.dataValues.likes - 1;
-			likes = likes < 0 ? 0 : likes; // prevent negative values
-			await Posts.update({ likes }, { where: { postId: _postId } });
+			});
+			await Posts.decrement("like", { where: { postId: _postId } });
+
+			res
+				.status(200)
+				.json({ message: "게시글의 좋아요를 취소하였습니다." });
 		}
 	} catch (error) {
-		throw new Error("400/게시글 좋아요에 실패하였습니다.");
+		throw new Error(error.message || "400/게시글 좋아요에 실패하였습니다.");
 	}
 });
 

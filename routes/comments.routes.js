@@ -11,15 +11,15 @@ router.post("/", authMiddleware, async (req, res) => {
 	const { comment } = req.body;
 	const { _postId } = req.params;
 
-	if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
-	
-	if (typeof comment !== "string")
-		throw new Error("412/데이터 형식이 올바르지 않습니다.");
-
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
-
 	try {
+		if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
+
+		if (typeof comment !== "string")
+			throw new Error("412/데이터 형식이 올바르지 않습니다.");
+
+		const existingPost = await Posts.findByPk(_postId);
+		if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
 		await Comments.create({
 			PostId: _postId,
 			nickname,
@@ -28,7 +28,7 @@ router.post("/", authMiddleware, async (req, res) => {
 		});
 		res.status(201).json({ message: "댓글을 작성하였습니다." });
 	} catch (error) {
-		throw new Error("400/댓글 작성에 실패하였습니다.");
+		throw new Error(error.message || "400/댓글 작성에 실패하였습니다.");
 	}
 });
 
@@ -36,10 +36,10 @@ router.post("/", authMiddleware, async (req, res) => {
 router.get("/", async (req, res) => {
 	const { _postId } = req.params;
 
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
-
 	try {
+		const existingPost = await Posts.findByPk(_postId);
+		if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
 		const comments = await Comments.findAll({
 			where: { PostId: _postId },
 			order: [["createdAt", "DESC"]],
@@ -58,23 +58,23 @@ router.put("/:_commentId", authMiddleware, async (req, res) => {
 	const { comment } = req.body;
 	const { _postId, _commentId } = req.params;
 
-	if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
-
-	if (typeof comment !== "string")
-		throw new Error("412/데이터 형식이 올바르지 않습니다.");
-
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
-
-	const existingComment = await Comments.findOne({
-		where: { commentId: _commentId },
-	});
-	if (!existingComment) throw new Error("404/댓글이 존재하지 않습니다.");
-
-	if (existingComment.UserId !== userId)
-		throw new Error("403/댓글의 수정 권한이 존재하지 않습니다.");
-
 	try {
+		if (!comment) throw new Error("412/댓글 내용을 입력해주세요");
+
+		if (typeof comment !== "string")
+			throw new Error("412/데이터 형식이 올바르지 않습니다.");
+
+		const existingPost = await Posts.findByPk(_postId);
+		if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
+		const existingComment = await Comments.findOne({
+			where: { commentId: _commentId },
+		});
+		if (!existingComment) throw new Error("404/댓글이 존재하지 않습니다.");
+
+		if (existingComment.UserId !== userId)
+			throw new Error("403/댓글의 수정 권한이 존재하지 않습니다.");
+
 		await Comments.update(
 			{ comment },
 			{
@@ -96,19 +96,19 @@ router.put("/:_commentId", authMiddleware, async (req, res) => {
 router.delete("/:_commentId", authMiddleware, async (req, res) => {
 	const { userId } = res.locals.user;
 	const { _postId, _commentId } = req.params;
-
-	const existingPost = await Posts.findByPk(_postId);
-	if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
-
-	const existingComment = await Comments.findOne({
-		where: { commentId: _commentId },
-	});
-	if (!existingComment) throw new Error("404/댓글이 존재하지 않습니다.");
-
-	if (existingComment.UserId !== userId)
-		throw new Error("403/댓글의 삭제 권한이 존재하지 않습니다.");
-
+    
 	try {
+		const existingPost = await Posts.findByPk(_postId);
+		if (!existingPost) throw new Error("404/게시글이 존재하지 않습니다.");
+
+		const existingComment = await Comments.findOne({
+			where: { commentId: _commentId },
+		});
+		if (!existingComment) throw new Error("404/댓글이 존재하지 않습니다.");
+
+		if (existingComment.UserId !== userId)
+			throw new Error("403/댓글의 삭제 권한이 존재하지 않습니다.");
+
 		await Comments.destroy({
 			where: { commentId: _commentId },
 		})
