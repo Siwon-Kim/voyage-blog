@@ -20,7 +20,7 @@ module.exports = async (req, res, next) => {
 
 		next();
 	} catch (error) {
-		console.error;
+		console.error(error);
 		return res.status(403).json({
 			// 쿠키가 비정상적이거나 만료된 경우
 			errorMessage: "전달된 쿠키에서 오류가 발생하였습니다.",
