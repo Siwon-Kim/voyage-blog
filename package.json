@@ -27,6 +27,7 @@
     "jsonwebtoken": "^9.0.0",
     "mongoose": "^7.0.3",
     "mysql2": "^3.2.3",
+    "redis": "^4.6.5",
     "sequelize": "^6.31.0",
     "swagger-autogen": "^2.23.1"
   },

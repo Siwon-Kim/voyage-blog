@@ -1,11 +1,43 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
+const redis = require("redis");
 const salt = 12;
 const SECRET_KEY = "secretkeyforvoyageblog";
 const UserService = require("../services/users.service");
 
+class RedisClient {
+	constructor() {
+		this.client = null;
+	}
+
+	initialize(callback) {
+		this.client = redis.createClient();
+		this.client.on('ready', () => {
+			callback();
+		})
+	}
+
+	get endpoint() {
+		return this.client;
+	}
+
+	setValue(key, value) {
+		this.client.set(key, value);
+	}
+
+	async getValue() {
+		return new Promise((resolve, reject) => {
+			this.client.get(key, (err, value) => {
+				if (err) reject(err);
+				resolve(value);
+			});
+		});
+	}
+}
+
 class UserController {
 	userService = new UserService();
+	redisClient = new RedisClient();
 
 	// POST: 회원 가입 API
 	signup = async (req, res, next) => {
@@ -63,13 +95,36 @@ class UserController {
 			if (!validInput)
 				throw new Error("412/닉네임 또는 패스워드를 확인해주세요.");
 
-			const token = jwt.sign({ userId: existingUser.userId }, SECRET_KEY);
-			res.cookie("Authorization", `Bearer ${token}`);
-			return res.status(200).json({ token });
+			const userId = existingUser.userId;
+			const accessToken = createAccessToken(userId);
+			const refreshToken = createRefreshToken();
+
+			this.redisClient.initialize(() => {
+				this.redisClient.setValue(userId, refreshToken);
+			})
+			
+			res.cookie("accessToken", `Bearer ${accessToken}`);
+			res.cookie("refreshToken", `Bearer ${refreshToken}`);
+			return res
+				.status(200)
+				.json({ message: "Token이 정상적으로 발급되었습니다." });
 		} catch (error) {
 			throw new Error(error.message || "400/로그인에 실패하였습니다.");
 		}
 	};
 }
 
-module.exports = UserController;
+function createAccessToken(id) {
+	const accessToken = jwt.sign({ id }, SECRET_KEY, { expiresIn: "10s" });
+	return accessToken;
+}
+
+function createRefreshToken() {
+	const refreshToken = jwt.sign({}, SECRET_KEY, { expiresIn: "7d" });
+	return refreshToken;
+}
+
+module.exports = {
+	UserController,
+	RedisClient,
+};

@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
 const authMiddleware = require("../middlewares/auth-middleware.js");
-const errorHandler = require("../middlewares/errorHandler");
 const CommentController = require("../controllers/comments.controller");
 const commentController = new CommentController();
 
@@ -16,7 +15,5 @@ router.put("/:_commentId", authMiddleware, commentController.changeComment);
 
 // DELETE: 댓글 삭제 API
 router.delete("/:_commentId", authMiddleware, commentController.deleteComment);
-
-router.use(errorHandler);
 
 module.exports = router;

@@ -1,7 +1,6 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
 const authMiddleware = require("../middlewares/auth-middleware.js");
-const errorHandler = require("../middlewares/errorHandler");
 const PostController = require("../controllers/posts.controller");
 const postController = new PostController();
 
@@ -25,7 +24,5 @@ router.delete("/:_postId", authMiddleware, postController.deletePost);
 
 // POST: 게시글 좋아요 API
 router.post("/:_postId/like", authMiddleware, postController.clickLike);
-
-router.use(errorHandler);
 
 module.exports = router;
