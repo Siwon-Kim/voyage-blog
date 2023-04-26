@@ -1,43 +1,50 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const redis = require("redis");
-const salt = 12;
-const SECRET_KEY = "secretkeyforvoyageblog";
 const UserService = require("../services/users.service");
+require("dotenv").config();
 
-class RedisClient {
-	constructor() {
-		this.client = null;
-	}
+// class RedisClient {
+// 	constructor() {
+// 		this.client = null;
+// 	}
 
-	initialize(callback) {
-		this.client = redis.createClient();
-		this.client.on('ready', () => {
-			callback();
-		})
-	}
+// 	initialize(callback) {
+// 		this.client = redis.createClient({
+// 			url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
+// 			legacyMode: true,
+// 		});
+// 		this.client.on("connect", () => {
+// 			console.info("Redis Connected");
+// 			callback();
+// 		});
+// 		this.redisClient.on("error", (err) => {
+// 			console.error("Redis Client Error", err);
+// 		});
+// 		this.redisClient.connect().then(); // redis v4 연결 (비동기)
+// 	}
 
-	get endpoint() {
-		return this.client;
-	}
+// 	get endpoint() {
+// 		return this.client;
+// 	}
 
-	setValue(key, value) {
-		this.client.set(key, value);
-	}
+// 	setValue(key, value) {
+// 		this.client.set(key, value);
+// 	}
 
-	async getValue() {
-		return new Promise((resolve, reject) => {
-			this.client.get(key, (err, value) => {
-				if (err) reject(err);
-				resolve(value);
-			});
-		});
-	}
-}
+// 	async getValue() {
+// 		return new Promise((resolve, reject) => {
+// 			this.client.get(key, (err, value) => {
+// 				if (err) reject(err);
+// 				resolve(value);
+// 			});
+// 		});
+// 	}
+// }
 
 class UserController {
 	userService = new UserService();
-	redisClient = new RedisClient();
+	// redisClient = new RedisClient();
 
 	// POST: 회원 가입 API
 	signup = async (req, res, next) => {
@@ -63,7 +70,10 @@ class UserController {
 			const existingUser = await this.userService.findUser(nickname);
 			if (existingUser) throw new Error("412/중복된 닉네임입니다.");
 
-			const hashedPassword = await bcrypt.hash(password, salt);
+			const hashedPassword = bcrypt.hash(
+				password,
+				process.env.SALT
+			);
 			await this.userService.createAccount(nickname, hashedPassword);
 			res.status(201).json({ message: "회원 가입에 성공하였습니다." });
 		} catch (error) {
@@ -99,10 +109,21 @@ class UserController {
 			const accessToken = createAccessToken(userId);
 			const refreshToken = createRefreshToken();
 
-			this.redisClient.initialize(() => {
-				this.redisClient.setValue(userId, refreshToken);
-			})
-			
+			// Redis
+			const redisClient = redis.createClient({
+				url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
+				legacyMode: true,
+			});
+			redisClient.on("connect", () => {
+				console.info("Redis connected!");
+			});
+			redisClient.on("error", (err) => {
+				console.error("Redis Client Error", err);
+			});
+			redisClient.connect().then(); // redis v4 연결 (비동기)
+			const redisCli = redisClient.v4;
+			await redisCli.set(refreshToken, userId);
+
 			res.cookie("accessToken", `Bearer ${accessToken}`);
 			res.cookie("refreshToken", `Bearer ${refreshToken}`);
 			return res
@@ -114,17 +135,18 @@ class UserController {
 	};
 }
 
-function createAccessToken(id) {
-	const accessToken = jwt.sign({ id }, SECRET_KEY, { expiresIn: "10s" });
+function createAccessToken(userId) {
+	const accessToken = jwt.sign({ userId }, process.env.SECRET_KEY, {
+		expiresIn: "2h",
+	});
 	return accessToken;
 }
 
 function createRefreshToken() {
-	const refreshToken = jwt.sign({}, SECRET_KEY, { expiresIn: "7d" });
+	const refreshToken = jwt.sign({}, process.env.SECRET_KEY, {
+		expiresIn: "7d",
+	});
 	return refreshToken;
 }
 
-module.exports = {
-	UserController,
-	RedisClient,
-};
+module.exports = UserController;

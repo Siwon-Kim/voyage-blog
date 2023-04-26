@@ -69,7 +69,7 @@ class CommentController {
 			if (!existingComment)
 				throw new Error("404/댓글이 존재하지 않습니다.");
 
-			if (existingComment.userId !== userId)
+			if (existingComment.UserId !== userId)
 				throw new Error("403/댓글의 수정 권한이 존재하지 않습니다.");
 
 			await this.commentService
