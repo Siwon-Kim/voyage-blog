@@ -13,7 +13,6 @@ class UserService {
 	};
 
 	createAccount = async (nickname, hashedPassword) => {
-		console.log("serv debug:::", hashedPassword, typeof hashedPassword);
 		await this.userRepository.createAccount(nickname, hashedPassword);
 	};
 }

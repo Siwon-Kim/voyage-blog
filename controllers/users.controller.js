@@ -24,7 +24,6 @@ class UserController {
 
 			const hashedPassword = await bcrypt.hash(password, salt)
 			
-			console.log("cntr debug:::", hashedPassword, typeof hashedPassword);
 			await this.userService.createAccount(nickname, hashedPassword);
 			res.status(201).json({ message: "회원 가입에 성공하였습니다." });
 		} catch (error) {
