@@ -18,9 +18,6 @@ class UserController {
 				throw new Error(`412/${error}`);
 			});
 
-		if ((password.toLowerCase()).includes(nickname.toLowerCase()))
-			throw new Error("412/패스워드에 닉네임이 포함되어 있습니다.");
-
 		try {
 			const existingUser = await this.userService.findUser(nickname);
 			if (existingUser) throw new Error("412/중복된 닉네임입니다.");

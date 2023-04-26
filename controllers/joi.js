@@ -20,7 +20,16 @@ module.exports = {
 			"any.only": "패스워드가 일치하지 않습니다.",
 			"string.empty": "패스워드가 일치하지 않습니다.",
 		}),
-	}),
+	})
+		.custom((value, helpers) => {
+			if (value.password.toLowerCase().includes(value.nickname.toLowerCase())) {
+				return helpers.error("custom.passwordContainsNickname");
+			}
+			return value;
+		})
+		.message({
+			"custom.passwordContainsNickname": "패스워드에 닉네임이 포함되어 있습니다.",
+		}),
 	loginSchema: Joi.object({
 		nickname: Joi.string().required().messages({
 			"string.base": "닉네임 또는 패스워드를 확인해주세요.",
@@ -31,20 +40,20 @@ module.exports = {
 			"string.empty": "닉네임 또는 패스워드를 확인해주세요.",
 		}),
 	}),
-    commentSchema: Joi.object({
-        comment: Joi.string().required().messages({
+	commentSchema: Joi.object({
+		comment: Joi.string().required().messages({
 			"string.base": "데이터 형식이 올바르지 않습니다.",
 			"string.empty": "댓글 내용을 입력해주세요.",
 		}),
-    }),
-    postSchema: Joi.object({
-        title: Joi.string().required().messages({
+	}),
+	postSchema: Joi.object({
+		title: Joi.string().required().messages({
 			"string.base": "게시글 제목의 형식이 일치하지 않습니다.",
 			"string.empty": "게시글 제목을 입력해주세요.",
 		}),
-        content: Joi.string().required().messages({
+		content: Joi.string().required().messages({
 			"string.base": "게시글 내용의 형식이 일치하지 않습니다.",
 			"string.empty": "게시글 내용을 입력해주세요.",
 		}),
-    })
+	}),
 };
