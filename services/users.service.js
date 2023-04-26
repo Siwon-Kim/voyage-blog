@@ -1,4 +1,7 @@
-const UserRepository = require("../repositories/users.repository");
+const {
+	UserRepository,
+	RedisClientRepository,
+} = require("../repositories/users.repository");
 
 class UserService {
 	userRepository = new UserRepository();
@@ -14,4 +17,26 @@ class UserService {
 	};
 }
 
-module.exports = UserService;
+class RedisClientService {
+	redisClientRepository = new RedisClientRepository();
+
+	async initialize() {
+		await this.redisClientRepository.initialize();
+	}
+
+	setRefreshToken = async (refreshToken, userId) => {
+		await this.redisClientRepository.setRefreshToken(refreshToken, userId);
+	};
+
+	getRefreshToken = async (refreshToken) => {
+		const token = await this.redisClientRepository.getRefreshToken(refreshToken);
+
+		return token;
+	};
+
+	deleteRefreshToken = async (refreshToken) => {
+		await this.redisClientRepository.deleteRefreshToken(refreshToken);
+	};
+}
+
+module.exports = { UserService, RedisClientService };

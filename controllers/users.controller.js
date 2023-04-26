@@ -1,50 +1,12 @@
 const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const redis = require("redis");
-const UserService = require("../services/users.service");
+const { UserService, RedisClientService } = require("../services/users.service");
+
 require("dotenv").config();
-
-class RedisClient {
-	constructor() {
-		this.redisClient = redis.createClient({
-			url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
-			legacyMode: true,
-		});
-
-		this.redisConnected = false;
-	}
-
-	async initialize() {
-		this.redisClient.on("connect", () => {
-			this.redisConnected = true;
-			console.info("Redis connected!");
-		});
-		this.redisClient.on("error", (err) => {
-			console.error("Redis Client Error", err);
-		});
-		if (!this.redisConnected) this.redisClient.connect().then(); // redis v4 연결 (비동기)
-	}
-
-	setRefreshToken = async (refreshToken, userId) => {
-		await this.initialize();
-		await this.redisClient.set(refreshToken, userId);
-	};
-
-	getRefreshToken = async (refreshToken) => {
-		await this.initialize();
-		const rt = await this.redisClient.get(refreshToken);
-		return rt;
-	};
-
-	deleteRefreshToken = async (refreshToken) => {
-		await this.initialize();
-		await this.redisClient.del(refreshToken);
-	};
-}
 
 class UserController {
 	userService = new UserService();
-	redisClient = new RedisClient();
+	redisClient = new RedisClientService();
 
 	// POST: 회원 가입 API
 	signup = async (req, res, next) => {
@@ -92,15 +54,11 @@ class UserController {
 			let validInput = false;
 			if (existingUser) {
 				const hashedPassword = existingUser.password;
-				const matchingPassword = await bcrypt.compare(
-					password,
-					hashedPassword
-				);
+				const matchingPassword = await bcrypt.compare(password, hashedPassword);
 				if (matchingPassword) validInput = true;
 			}
 
-			if (!validInput)
-				throw new Error("412/닉네임 또는 패스워드를 확인해주세요.");
+			if (!validInput) throw new Error("412/닉네임 또는 패스워드를 확인해주세요.");
 
 			const userId = existingUser.userId;
 			const accessToken = createAccessToken(userId);
@@ -133,4 +91,4 @@ function createRefreshToken() {
 	return refreshToken;
 }
 
-module.exports = { UserController, RedisClient };
+module.exports = { UserController };

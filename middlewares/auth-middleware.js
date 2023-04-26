@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Users } = require("../models");
-const { RedisClient } = require("../controllers/users.controller");
+const { RedisClientService } = require("../services/users.service");
 
 module.exports = async (req, res, next) => {
 	const accessToken = req.cookies.accessToken;
@@ -28,13 +28,11 @@ module.exports = async (req, res, next) => {
 	const isRefreshTokenValid = validateRefreshToken(authRefreshToken);
 
 	try {
-		const redisClient = new RedisClient();
+		const redisClient = new RedisClientService();
 
 		if (!isRefreshTokenValid) {
 			await redisClient.deleteRefreshToken(authRefreshToken);
-			return res
-				.status(419)
-				.json({ message: "Refresh Token이 만료되었습니다." });
+			return res.status(419).json({ message: "Refresh Token이 만료되었습니다." });
 		}
 
 		if (!isAccessTokenValid) {
@@ -46,7 +44,9 @@ module.exports = async (req, res, next) => {
 
 			newAccessToken = createAccessToken(accessTokenId);
 			res.cookie("accessToken", `Bearer ${newAccessToken}`);
-			return res.json({ message: "Access Token을 새롭게 발급하였습니다. 다시 시도하십시오." });
+			return res.json({
+				message: "Access Token을 새롭게 발급하였습니다. 다시 시도하십시오.",
+			});
 		}
 		const { userId } = getAccessTokenPayload(authAccessToken);
 
