@@ -1,7 +1,6 @@
 const jwt = require("jsonwebtoken");
-const redis = require("redis");
 const { Users } = require("../models");
-// const { RedisClient } = require("../controllers/users.controller");
+const { RedisClient } = require("../controllers/users.controller");
 
 module.exports = async (req, res, next) => {
 	const accessToken = req.cookies.accessToken;
@@ -29,28 +28,17 @@ module.exports = async (req, res, next) => {
 	const isRefreshTokenValid = validateRefreshToken(authRefreshToken);
 
 	try {
-		const redisClient = redis.createClient({
-			url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
-			legacyMode: true,
-		});
-		redisClient.on("connect", () => {
-			console.info("Redis connected!");
-		});
-		redisClient.on("error", (err) => {
-			console.error("Redis Client Error", err);
-		});
-		redisClient.connect().then(); // redis v4 연결 (비동기)
-		const redisCli = redisClient.v4;
+		const redisClient = new RedisClient();
 
 		if (!isRefreshTokenValid) {
-			await redisCli.del(authRefreshToken);
+			await redisClient.deleteRefreshToken(authRefreshToken);
 			return res
 				.status(419)
 				.json({ message: "Refresh Token이 만료되었습니다." });
 		}
 
 		if (!isAccessTokenValid) {
-			const accessTokenId = await redisCli.get(authRefreshToken);
+			const accessTokenId = await redisClient.getRefreshToken(authRefreshToken);
 			if (!accessTokenId)
 				return res.status(419).json({
 					message: "Refresh Token의 정보가 서버에 존재하지 않습니다.",
