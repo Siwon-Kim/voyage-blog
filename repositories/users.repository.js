@@ -12,6 +12,7 @@ class UserRepository {
 	};
 
 	createAccount = async (nickname, hashedPassword) => {
+		console.log("repo debug:::", hashedPassword, typeof hashedPassword);
 		await Users.create({ nickname, password: hashedPassword });
 	};
 }
