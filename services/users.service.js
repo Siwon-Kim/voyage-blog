@@ -7,7 +7,7 @@ const { UserRepository, RedisClientRepository } = require("../repositories/users
 class UserService {
 	userRepository = new UserRepository();
 	redisClientRepository = new RedisClientRepository();
-
+	
 	createAccount = async (nickname, password) => {
 		const existingUser = await this.userRepository.findUser(nickname);
 		if (existingUser) throw new Error("412/중복된 닉네임입니다.");
@@ -29,7 +29,6 @@ class UserService {
 		const userId = existingUser.userId;
 		const accessToken = createAccessToken(userId);
 		const refreshToken = createRefreshToken();
-
 		await this.redisClientRepository.setRefreshToken(refreshToken, userId);
 		return { accessToken, refreshToken };
 	};

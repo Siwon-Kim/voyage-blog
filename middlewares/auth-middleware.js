@@ -5,14 +5,14 @@ const { RedisClientRepository } = require("../repositories/users.repository");
 module.exports = async (req, res, next) => {
 	const accessToken = req.cookies.accessToken;
 	const refreshToken = req.cookies.refreshToken;
-	let newAccessToken;
+	let newAccessToken = null;
 
 	const [authAccessType, authAccessToken] = (accessToken ?? "").split(" ");
 	const [authRefreshType, authRefreshToken] = (refreshToken ?? "").split(" ");
 
 	if (authAccessType !== "Bearer" || !authAccessToken) {
 		console.error("Refresh Token이 존재하지 않습니다.");
-		res.clearCookie('accessToken'); 
+		// res.clearCookie('accessToken'); 
 		return res.status(403).json({
 			errorMessage: "로그인이 필요한 기능입니다.",
 		});
@@ -20,7 +20,7 @@ module.exports = async (req, res, next) => {
 
 	if (authRefreshType !== "Bearer" || !authRefreshToken) {
 		console.error("Access Token이 존재하지 않습니다.");
-		res.clearCookie('refreshToken'); 
+		// res.clearCookie('refreshToken'); 
 		return res.status(403).json({
 			errorMessage: "로그인이 필요한 기능입니다.",
 		});
@@ -39,6 +39,7 @@ module.exports = async (req, res, next) => {
 
 		if (!isAccessTokenValid) {
 			const accessTokenId = await redisClient.getRefreshToken(authRefreshToken);
+			console.log(accessTokenId);
 			if (!accessTokenId)
 				return res.status(419).json({
 					message: "Refresh Token의 정보가 서버에 존재하지 않습니다.",
@@ -46,11 +47,12 @@ module.exports = async (req, res, next) => {
 
 			newAccessToken = createAccessToken(accessTokenId);
 			res.cookie("accessToken", `Bearer ${newAccessToken}`);
-			return res.json({
-				message: "Access Token을 새롭게 발급하였습니다. 다시 시도하십시오.",
-			});
+
+			// return res.json({
+			// 	message: "Access Token을 새롭게 발급하였습니다. 다시 시도하십시오.",
+			// });
 		}
-		const { userId } = getAccessTokenPayload(authAccessToken);
+		const { userId } = getAccessTokenPayload(newAccessToken ?? authAccessToken);
 
 		const user = await Users.findOne({ where: { userId } });
 		res.locals.user = user;

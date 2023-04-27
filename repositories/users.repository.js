@@ -39,18 +39,19 @@ class RedisClientRepository {
 
 	setRefreshToken = async (refreshToken, userId) => {
 		await this.initialize();
-		await this.redisClient.set(refreshToken, userId);
+		await this.redisClient.v4.set(refreshToken, userId);
 	};
 
 	getRefreshToken = async (refreshToken) => {
 		await this.initialize();
-		const token = await this.redisClient.get(refreshToken);
+		console.log("repo", refreshToken);
+		const token = await this.redisClient.v4.get(refreshToken);
 		return token;
 	};
 
 	deleteRefreshToken = async (refreshToken) => {
 		await this.initialize();
-		await this.redisClient.del(refreshToken);
+		await this.redisClient.v4.del(refreshToken);
 	};
 }
 
