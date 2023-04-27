@@ -1,42 +1,52 @@
-const {
-	UserRepository,
-	RedisClientRepository,
-} = require("../repositories/users.repository");
+const jwt = require("jsonwebtoken");
+const bcrypt = require("bcrypt");
+const salt = 10;
+
+const { UserRepository, RedisClientRepository } = require("../repositories/users.repository");
 
 class UserService {
 	userRepository = new UserRepository();
-
-	findUser = async (nickname) => {
-		const user = await this.userRepository.findUser(nickname);
-
-		return user;
-	};
-
-	createAccount = async (nickname, hashedPassword) => {
-		await this.userRepository.createAccount(nickname, hashedPassword);
-	};
-}
-
-class RedisClientService {
 	redisClientRepository = new RedisClientRepository();
 
-	async initialize() {
-		await this.redisClientRepository.initialize();
-	}
+	createAccount = async (nickname, password) => {
+		const existingUser = await this.userRepository.findUser(nickname);
+		if (existingUser) throw new Error("412/중복된 닉네임입니다.");
 
-	setRefreshToken = async (refreshToken, userId) => {
+		const hashedPassword = await bcrypt.hash(password, salt);
+		await this.userRepository.createAccount(nickname, hashedPassword);
+	};
+
+	login = async (nickname, password) => {
+		const existingUser = await this.userRepository.findUser(nickname);
+		let validInput = false;
+		if (existingUser) {
+			const hashedPassword = existingUser.password;
+			const matchingPassword = await bcrypt.compare(password, hashedPassword);
+			if (matchingPassword) validInput = true;
+		}
+		if (!validInput) throw new Error("412/닉네임 또는 패스워드를 확인해주세요.");
+
+		const userId = existingUser.userId;
+		const accessToken = createAccessToken(userId);
+		const refreshToken = createRefreshToken();
+
 		await this.redisClientRepository.setRefreshToken(refreshToken, userId);
-	};
-
-	getRefreshToken = async (refreshToken) => {
-		const token = await this.redisClientRepository.getRefreshToken(refreshToken);
-
-		return token;
-	};
-
-	deleteRefreshToken = async (refreshToken) => {
-		await this.redisClientRepository.deleteRefreshToken(refreshToken);
+		return { accessToken, refreshToken };
 	};
 }
 
-module.exports = { UserService, RedisClientService };
+function createAccessToken(userId) {
+	const accessToken = jwt.sign({ userId }, process.env.SECRET_KEY, {
+		expiresIn: "2h",
+	});
+	return accessToken;
+}
+
+function createRefreshToken() {
+	const refreshToken = jwt.sign({}, process.env.SECRET_KEY, {
+		expiresIn: "7d",
+	});
+	return refreshToken;
+}
+
+module.exports = UserService;

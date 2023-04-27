@@ -1,6 +1,6 @@
 const jwt = require("jsonwebtoken");
 const { Users } = require("../models");
-const { RedisClientService } = require("../services/users.service");
+const { RedisClientRepository } = require("../repositories/users.repository");
 
 module.exports = async (req, res, next) => {
 	const accessToken = req.cookies.accessToken;
@@ -12,6 +12,7 @@ module.exports = async (req, res, next) => {
 
 	if (authAccessType !== "Bearer" || !authAccessToken) {
 		console.error("Refresh Token이 존재하지 않습니다.");
+		res.clearCookie('accessToken'); 
 		return res.status(403).json({
 			errorMessage: "로그인이 필요한 기능입니다.",
 		});
@@ -19,6 +20,7 @@ module.exports = async (req, res, next) => {
 
 	if (authRefreshType !== "Bearer" || !authRefreshToken) {
 		console.error("Access Token이 존재하지 않습니다.");
+		res.clearCookie('refreshToken'); 
 		return res.status(403).json({
 			errorMessage: "로그인이 필요한 기능입니다.",
 		});
@@ -28,7 +30,7 @@ module.exports = async (req, res, next) => {
 	const isRefreshTokenValid = validateRefreshToken(authRefreshToken);
 
 	try {
-		const redisClient = new RedisClientService();
+		const redisClient = new RedisClientRepository();
 
 		if (!isRefreshTokenValid) {
 			await redisClient.deleteRefreshToken(authRefreshToken);
@@ -56,6 +58,8 @@ module.exports = async (req, res, next) => {
 		next();
 	} catch (error) {
 		console.error(error);
+		res.clearCookie('accessToken'); 
+		res.clearCookie('refreshToken'); 
 		return res.status(403).json({
 			// 쿠키가 비정상적이거나 만료된 경우
 			errorMessage: "전달된 쿠키에서 오류가 발생하였습니다.",

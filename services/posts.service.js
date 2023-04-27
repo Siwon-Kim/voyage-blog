@@ -9,6 +9,7 @@ class PostService {
 
 	findAllPost = async () => {
 		const allPosts = await this.postRepository.findAllPost();
+		if (allPosts.length === 0) throw new Error("404/게시글이 존재하지 않습니다.");
 
 		return allPosts.map((post) => ({
 			postId: post.postId,
@@ -21,35 +22,22 @@ class PostService {
 		}));
 	};
 
-	findLikedPosts = async (userId) => {
-		const likedPosts = await this.postRepository.findLikedPosts(userId);
-
-		return likedPosts.map((post) => ({
-			postId: post.Post.postId,
-			userId: post.Post.UserId,
-			nickname: post.Post.nickname,
-			title: post.Post.title,
-			createdAt: post.Post.createdAt,
-			updatedAt: post.Post.updatedAt,
-			likes: post.Post.like,
-		}));
-	};
-
 	findPostById = async (postId) => {
 		const post = await this.postRepository.findPostById(postId);
+		if (!post) throw new Error("404/게시글이 존재하지 않습니다.");
 
 		return post === null
 			? 0
 			: {
-				postId: post.postId,
-				userId: post.UserId,
-				nickname: post.nickname,
-				title: post.title,
-				content: post.content,
-				createdAt: post.createdAt,
-				updatedAt: post.updatedAt,
-				likes: post.like,
-			};
+					postId: post.postId,
+					userId: post.UserId,
+					nickname: post.nickname,
+					title: post.title,
+					content: post.content,
+					createdAt: post.createdAt,
+					updatedAt: post.updatedAt,
+					likes: post.like,
+			  };
 	};
 
 	findPost = async (userId, postId) => {
@@ -59,33 +47,25 @@ class PostService {
 	};
 
 	updatePost = async (title, content, postId, userId) => {
-		await this.postRepository.updatePost(title, content, postId, userId);
+		const post = await this.postRepository.findPost(userId, postId);
+		if (!post) throw new Error("403/게시글 수정의 권한이 존재하지 않습니다.");
+
+		await this.postRepository.updatePost(title, content, postId, userId).catch((error) => {
+			throw new Error("401/게시글이 정상적으로 수정되지 않았습니다.");
+		});
 	};
 
 	deletePost = async (postId, userId) => {
-		await this.postRepository.deletePost(postId, userId);
-	};
+		const existingPost = await this.postRepository.findPostById(postId);
+		if (!existingPost) {
+			throw new Error("404/게시글이 존재하지 않습니다.");
+		}
+		if (existingPost.UserId !== userId)
+			throw new Error("403/게시글의 삭제 권한이 존재하지 않습니다.");
 
-	findLike = async (postId, userId) => {
-		const getLike = this.postRepository.findLike(postId, userId);
-
-		return getLike;
-	};
-
-	createLike = async (userId, postId) => {
-		await this.postRepository.createLike(userId, postId);
-	};
-
-	deleteLike = async (userId, postId) => {
-		await this.postRepository.deleteLike(userId, postId);
-	};
-
-	incrementLike = async (postId) => {
-		await this.postRepository.incrementLike(postId);
-	};
-
-	decrementLike = async (postId) => {
-		await this.postRepository.decrementLike(postId);
+		await this.postRepository.deletePost(postId, userId).catch((error) => {
+			throw new Error("401/게시글이 정상적으로 삭제되지 않았습니다.");
+		});
 	};
 }
 

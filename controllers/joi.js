@@ -31,7 +31,7 @@ module.exports = {
 			"custom.passwordContainsNickname": "패스워드에 닉네임이 포함되어 있습니다.",
 		}),
 	loginSchema: Joi.object({
-		nickname: Joi.string().required().messages({
+		nickname: Joi.string().required().min(1).messages({
 			"string.base": "닉네임 또는 패스워드를 확인해주세요.",
 			"string.empty": "닉네임 또는 패스워드를 확인해주세요.",
 		}),
