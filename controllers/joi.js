@@ -34,26 +34,31 @@ module.exports = {
 		nickname: Joi.string().required().min(1).messages({
 			"string.base": "닉네임 또는 패스워드를 확인해주세요.",
 			"string.empty": "닉네임 또는 패스워드를 확인해주세요.",
+			"string.min": "닉네임 또는 패스워드를 확인해주세요.",
 		}),
 		password: Joi.string().required().messages({
 			"string.base": "닉네임 또는 패스워드를 확인해주세요.",
 			"string.empty": "닉네임 또는 패스워드를 확인해주세요.",
+			"string.min": "닉네임 또는 패스워드를 확인해주세요.",
 		}),
 	}),
 	commentSchema: Joi.object({
-		comment: Joi.string().required().messages({
+		comment: Joi.string().min(1).required().messages({
 			"string.base": "데이터 형식이 올바르지 않습니다.",
 			"string.empty": "댓글 내용을 입력해주세요.",
+			"string.min": "데이터 형식이 올바르지 않습니다.",
 		}),
 	}),
 	postSchema: Joi.object({
-		title: Joi.string().required().messages({
+		title: Joi.string().min(1).required().messages({
 			"string.base": "게시글 제목의 형식이 일치하지 않습니다.",
 			"string.empty": "게시글 제목을 입력해주세요.",
+			"string.min": "게시글 제목의 형식이 일치하지 않습니다.",
 		}),
-		content: Joi.string().required().messages({
+		content: Joi.string().min(1).required().messages({
 			"string.base": "게시글 내용의 형식이 일치하지 않습니다.",
 			"string.empty": "게시글 내용을 입력해주세요.",
+			"string.min": "게시글 내용의 형식이 일치하지 않습니다.",
 		}),
 	}),
 };
