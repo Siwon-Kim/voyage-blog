@@ -9,6 +9,6 @@ const doc = {
 	schemes: ["http"],
 };
 
-const outputFile = "./swagger-output.json";
-const endpointsFiles = ["./app.js"];
+const outputFile = "../swagger-output.json";
+const endpointsFiles = ["../app.js"];
 swaggerAutogen(outputFile, endpointsFiles, doc);

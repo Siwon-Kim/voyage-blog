@@ -1,12 +1,18 @@
 const { Users } = require("../models");
 const redis = require("redis");
-require("dotenv").config();
+const { config } = require("../config/config");
 
 class UserRepository {
-	findUser = async (nickname) => {
+	findByNickname = async (nickname) => {
 		const user = await Users.findOne({
 			where: { nickname },
 		});
+
+		return user;
+	};
+
+	findById = async (userId) => {
+		const user = await Users.findOne({ where: { userId } });
 
 		return user;
 	};
@@ -19,7 +25,7 @@ class UserRepository {
 class RedisClientRepository {
 	constructor() {
 		this.redisClient = redis.createClient({
-			url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
+			url: `redis://${config.redis.username}:${config.redis.password}@${config.redis.host}:${config.redis.port}/0`,
 			legacyMode: true,
 		});
 
@@ -44,7 +50,6 @@ class RedisClientRepository {
 
 	getRefreshToken = async (refreshToken) => {
 		await this.initialize();
-		console.log("repo", refreshToken);
 		const token = await this.redisClient.v4.get(refreshToken);
 		return token;
 	};

@@ -19,7 +19,7 @@ class CommentController {
 			res.status(201).json({ message: "댓글을 작성하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/댓글 작성에 실패하였습니다.");
+			throw new Error(error.message || "500/댓글 작성에 실패하였습니다.");
 		}
 	};
 
@@ -32,7 +32,7 @@ class CommentController {
 			res.status(200).json({ comments });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/댓글 조회에 실패하였습니다.");
+			throw new Error(error.message || "500/댓글 조회에 실패하였습니다.");
 		}
 	};
 
@@ -49,7 +49,7 @@ class CommentController {
 			res.status(200).json({ message: "댓글을 수정하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/댓글 수정에 실패하였습니다.");
+			throw new Error(error.message || "500/댓글 수정에 실패하였습니다.");
 		}
 	};
 
@@ -64,7 +64,7 @@ class CommentController {
 			res.status(200).json({ message: "댓글을 삭제하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/댓글 삭제에 실패하였습니다.");
+			throw new Error(error.message || "500/댓글 삭제에 실패하였습니다.");
 		}
 	};
 }

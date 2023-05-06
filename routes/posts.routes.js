@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router({ mergeParams: true });
 const authMiddleware = require("../middlewares/auth-middleware.js");
+// const { validate } = require("../server/middleware/validator.js");
 const PostController = require("../controllers/posts.controller");
 const postController = new PostController();
 

@@ -22,18 +22,18 @@ class PostController {
 			});
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 작성에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 작성에 실패하였습니다.");
 		}
 	};
 
 	// GET: 전체 게시글 목록 조회 API
 	getAllPosts = async (req, res, next) => {
 		try {
-			const posts = await this.postService.findAllPost();
+			const posts = await this.postService.findAllPosts();
 			res.status(200).json({ posts });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 조회에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 조회에 실패하였습니다.");
 		}
 	};
 
@@ -46,7 +46,7 @@ class PostController {
 			res.status(200).json({ posts });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/좋아요 게시글 조회에 실패하였습니다.");
+			throw new Error(error.message || "500/좋아요 게시글 조회에 실패하였습니다.");
 		}
 	};
 
@@ -59,7 +59,7 @@ class PostController {
 			res.status(200).json({ post });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 조회에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 조회에 실패하였습니다.");
 		}
 	};
 
@@ -78,7 +78,7 @@ class PostController {
 			res.status(200).json({ message: "게시글을 수정하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 수정에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 수정에 실패하였습니다.");
 		}
 	};
 
@@ -92,7 +92,7 @@ class PostController {
 			res.status(200).json({ message: "게시글을 삭제하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 삭제에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 삭제에 실패하였습니다.");
 		}
 	};
 
@@ -110,7 +110,7 @@ class PostController {
 			res.status(200).json({ message });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/게시글 좋아요에 실패하였습니다.");
+			throw new Error(error.message || "500/게시글 좋아요에 실패하였습니다.");
 		}
 	};
 }

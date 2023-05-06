@@ -1,6 +1,5 @@
 const UserService = require("../services/users.service");
 const { signupSchema, loginSchema } = require("./joi");
-require("dotenv").config();
 
 class UserController {
 	userService = new UserService();
@@ -18,7 +17,7 @@ class UserController {
 			res.status(201).json({ message: "회원 가입에 성공하였습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/요청한 데이터 형식이 올바르지 않습니다.");
+			throw new Error(error.message || "500/요청한 데이터 형식이 올바르지 않습니다.");
 		}
 	};
 
@@ -40,7 +39,7 @@ class UserController {
 			return res.status(200).json({ message: "Token이 정상적으로 발급되었습니다." });
 		} catch (error) {
 			console.error(`${req.method} ${req.originalUrl} : ${error.message}`);
-			throw new Error(error.message || "400/로그인에 실패하였습니다.");
+			throw new Error(error.message || "500/로그인에 실패하였습니다.");
 		}
 	};
 }

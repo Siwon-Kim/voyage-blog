@@ -4,7 +4,7 @@ const { Transaction } = require("sequelize");
 const { sequelize } = require("../models");
 
 class LikeRepository {
-	findLikedPosts = async (userId) => {
+	findAllByUserId = async (userId) => {
 		const likedPosts = await Likes.findAll({
 			include: [
 				{
@@ -28,13 +28,7 @@ class LikeRepository {
 		return likedPosts;
 	};
 
-	findPostById = async (postId) => {
-		const post = await Posts.findByPk(postId);
-
-		return post;
-	};
-
-	findLike = async (postId, userId) => {
+	findOneByIds = async (postId, userId) => {
 		const getLike = await Likes.findOne({
 			where: {
 				[Op.and]: [{ PostId: postId }, [{ userId: userId }]],
@@ -44,7 +38,7 @@ class LikeRepository {
 		return getLike;
 	};
 
-	createLike = async (userId, postId) => {
+	create = async (userId, postId) => {
 		const t = await sequelize.transaction({
 			isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
 		});
@@ -62,7 +56,7 @@ class LikeRepository {
 		}
 	};
 
-	deleteLike = async (userId, postId) => {
+	remove = async (userId, postId) => {
 		const t = await sequelize.transaction({
 			isolationLevel: Transaction.ISOLATION_LEVELS.READ_COMMITTED,
 		});

@@ -1,7 +1,6 @@
-const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
-const salt = 10;
-
+const { config } = require("../config/config");
+const { TokenHelper } = require("../utils/tokenHelper");
 const { UserRepository, RedisClientRepository } = require("../repositories/users.repository");
 
 class UserService {
@@ -9,15 +8,16 @@ class UserService {
 	redisClientRepository = new RedisClientRepository();
 	
 	createAccount = async (nickname, password) => {
-		const existingUser = await this.userRepository.findUser(nickname);
+		const existingUser = await this.userRepository.findByNickname(nickname);
 		if (existingUser) throw new Error("412/중복된 닉네임입니다.");
 
-		const hashedPassword = await bcrypt.hash(password, salt);
+		const hashedPassword = await bcrypt.hash(password, config.bcrypt.saltRounds);
 		await this.userRepository.createAccount(nickname, hashedPassword);
 	};
 
 	login = async (nickname, password) => {
-		const existingUser = await this.userRepository.findUser(nickname);
+		const tokenHelper = new TokenHelper();
+		const existingUser = await this.userRepository.findByNickname(nickname);
 		let validInput = false;
 		if (existingUser) {
 			const hashedPassword = existingUser.password;
@@ -27,25 +27,11 @@ class UserService {
 		if (!validInput) throw new Error("412/닉네임 또는 패스워드를 확인해주세요.");
 
 		const userId = existingUser.userId;
-		const accessToken = createAccessToken(userId);
-		const refreshToken = createRefreshToken();
+		const accessToken = tokenHelper.createAccessToken(userId);
+		const refreshToken = tokenHelper.createRefreshToken();
 		await this.redisClientRepository.setRefreshToken(refreshToken, userId);
 		return { accessToken, refreshToken };
 	};
-}
-
-function createAccessToken(userId) {
-	const accessToken = jwt.sign({ userId }, process.env.SECRET_KEY, {
-		expiresIn: "2h",
-	});
-	return accessToken;
-}
-
-function createRefreshToken() {
-	const refreshToken = jwt.sign({}, process.env.SECRET_KEY, {
-		expiresIn: "7d",
-	});
-	return refreshToken;
 }
 
 module.exports = UserService;

@@ -5,8 +5,9 @@ const swaggerUi = require("swagger-ui-express");
 const swaggerFile = require("./swagger-output");
 const errorHandler = require("./middlewares/errorHandler");
 const mainRouter = require("./routes/index.routes.js");
+const { config } = require("./config/config");
 const app = express();
-const port = 3000;
+const port = config.host.port;
 
 // parser
 app.use(express.json());

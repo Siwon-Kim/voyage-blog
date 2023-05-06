@@ -1,8 +1,7 @@
 const { Comments } = require("../models");
 
 class CommentRepository {
-	createComment = async (postId, nickname, userId, comment) => {
-        
+	create = async (postId, nickname, userId, comment) => {
 		await Comments.create({
 			PostId: postId,
 			nickname,
@@ -11,7 +10,7 @@ class CommentRepository {
 		});
 	};
 
-	findAllComments = async (postId) => {
+	findAllByPostId = async (postId) => {
 		const comments = await Comments.findAll({
 			where: { PostId: postId },
 			order: [["createdAt", "DESC"]],
@@ -19,14 +18,14 @@ class CommentRepository {
 		return comments;
 	};
 
-	findComment = async (commentId) => {
+	findOneByCommentId = async (commentId) => {
 		const comment = await Comments.findOne({
 			where: { commentId },
 		});
 		return comment;
 	};
 
-	updateComment = async (comment, commentId) => {
+	update = async (comment, commentId) => {
 		await Comments.update(
 			{ comment },
 			{
@@ -35,7 +34,7 @@ class CommentRepository {
 		);
 	};
 
-	deleteComment = async (commentId) => {
+	remove = async (commentId) => {
 		await Comments.destroy({
 			where: { commentId },
 		})

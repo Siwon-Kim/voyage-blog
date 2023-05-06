@@ -1,8 +1,8 @@
 const express = require("express");
 const router = express.Router();
 const { UserController } = require("../controllers/users.controller");
+// const { validate } = require("../server/middleware/validator.js");
 const userController = new UserController();
-
 
 // POST: 회원 가입 API
 router.post("/signup", userController.signup);
